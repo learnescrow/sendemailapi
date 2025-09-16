@@ -8,48 +8,60 @@ export async function POST(req: Request) {
     const { name, email, projectName } = await req.json();
 
     if (!name || !email || !projectName) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing fields" },
+        {
+          status: 400,
+          headers: { "Access-Control-Allow-Origin": "*" },
+        }
+      );
     }
 
-    console.log("Sending email with:", { name, email, projectName });
-
-    // Send to Admin
-    const adminResult = await resend.emails.send({
-      from: "noreply@noreply.capitalflasher.com", // ✅ your verified domain
-      to: "ganeshwebby@gmail.com",     // replace with your admin email
-      subject: `Project Completed: ${projectName}`,
-      html: `
-        <h2>Project Completed</h2>
-        <p><strong>Project:</strong> ${projectName}</p>
-        <p><strong>Client Name:</strong> ${name}</p>
-        <p><strong>Client Email:</strong> ${email}</p>
-      `,
-    });
-
-    console.log("Admin email result:", adminResult);
-
-    // Send to Client
+    // ✅ Send ONLY to the client
     const clientResult = await resend.emails.send({
-      from: "noreply@noreply.capitalflasher.com",
-      to: email,
+      from: "noreply@noreply.capitalflasher.com", // your verified sender
+      to: email, // client email from form
       subject: `Your Project "${projectName}" is Completed`,
       html: `
         <h2>Congratulations 🎉</h2>
+        <p>Hi ${name},</p>
         <p>Your project <strong>${projectName}</strong> has been successfully completed.</p>
         <p>Thank you for working with us!</p>
       `,
     });
 
-    console.log("Client email result:", clientResult);
+    return NextResponse.json(
+      { success: true, clientEmailSent: !clientResult.error },
+      {
+        status: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }
+    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error sending email";
 
-    return NextResponse.json({ success: true, adminResult, clientResult });
-  }  catch (error: unknown) {
-  if (error instanceof Error) {
-    console.error("Resend Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: message },
+      {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }
+    );
   }
-
-  console.error("Unknown error:", error);
-  return NextResponse.json({ error: "Unknown error" }, { status: 500 });
 }
+
+// ✅ Handle preflight CORS requests
+export async function OPTIONS() {
+  return NextResponse.json(
+    {},
+    {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    }
+  );
 }
