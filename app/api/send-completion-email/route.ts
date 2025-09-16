@@ -43,8 +43,13 @@ export async function POST(req: Request) {
     console.log("Client email result:", clientResult);
 
     return NextResponse.json({ success: true, adminResult, clientResult });
-  } catch (error: any) {
-    console.error("Resend Error Full:", error);
-    return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+  }  catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error("Resend Error:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  console.error("Unknown error:", error);
+  return NextResponse.json({ error: "Unknown error" }, { status: 500 });
+}
 }
