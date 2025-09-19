@@ -5,11 +5,11 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    const { name, email, projectName } = await req.json();
+    const { email, subject, html } = await req.json();
 
-    if (!name || !email || !projectName) {
+    if (!email || !subject || !html) {
       return NextResponse.json(
-        { error: "Missing fields" },
+        { error: "Missing fields: email, subject, html are required" },
         {
           status: 400,
           headers: { "Access-Control-Allow-Origin": "*" },
@@ -17,21 +17,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Send ONLY to the client
-    const clientResult = await resend.emails.send({
-      from: "noreply@noreply.capitalflasher.com", // your verified sender
-      to: email, // client email from form
-      subject: `Your Project "${projectName}" is Completed`,
-      html: `
-        <h2>Congratulations 🎉</h2>
-        <p>Hi ${name},</p>
-        <p>Your project <strong>${projectName}</strong> has been successfully completed.</p>
-        <p>Thank you for working with us!</p>
-      `,
+    // ✅ Send to the client email provided
+    const result = await resend.emails.send({
+      from: "noreply@noreply.capitalflasher.com", // verified sender
+      to: email, // dynamic recipient
+      subject,
+      html,
     });
 
     return NextResponse.json(
-      { success: true, clientEmailSent: !clientResult.error },
+      { success: true, emailSent: !result.error },
       {
         status: 200,
         headers: { "Access-Control-Allow-Origin": "*" },
