@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     // ✅ Send to the client email provided
     const result = await resend.emails.send({
-      from: "Interiors <noreply@noreply.capitalflasher.com>", // verified sender
+      from: "CivilRaw <noreply@noreply.capitalflasher.com>", // verified sender
       to: email, // dynamic recipient
       subject,
       html,
