@@ -28,8 +28,19 @@ async function getBrowser() {
     const puppeteerCore = await import("puppeteer-core");
     const chromium = await import("@sparticuz/chromium");
     
+    // Set binary path for brotli decompression
+    if (process.env.AWS_EXECUTION_ENV) {
+      chromium.default.setGraphicsMode = false;
+    }
+    
     return puppeteerCore.default.launch({
-      args: chromium.default.args,
+      args: [
+        ...chromium.default.args,
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+      ],
       executablePath: await chromium.default.executablePath(),
       headless: true,
     });
